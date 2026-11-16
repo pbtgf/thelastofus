@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE LAST OF US — Fan Experience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;400;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   БАЗА / ПЕРЕМЕННЫЕ
+   ============================================================ */
+:root{
+  --bone:#e8e2d4;
+  --ash:#8a8578;
+  --blood:#7a1f1f;
+  --rust:#b5562f;
+  --moss:#3a4a35;
+  --bg:#0c0c0a;
+  --fire:#e0932f;
+  /* палитра Part II */
+  --cool:#6f8a8a;
+  --rain:#8fb0b0;
+  --led:#3f8f8f;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html,body{width:100%;}
+body{
+  background:var(--bg);
+  color:var(--bone);
+  font-family:'Oswald',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ============================================================
+   ОБЩИЕ АТМОСФЕРНЫЕ СЛОИ
+   ============================================================ */
+#spores{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+}
+.grain{
+  position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainMove .6s steps(2) infinite;
+}
+@keyframes grainMove{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-2%,1%)}
+  50%{transform:translate(1%,-2%)}
+  75%{transform:translate(-1%,2%)}
+  100%{transform:translate(0,0)}
+}
+
+/* ============================================================
+   ЭКРАНЫ (переключение без перезагрузки)
+   ============================================================ */
+.screen{display:none;position:relative;z-index:5;}
+.screen.active{display:block;animation:screenIn .8s ease both;}
+@keyframes screenIn{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* ============================================================
+   ЭКРАН ВЫБОРА
+   ============================================================ */
+.choice-screen{
+  height:100vh;width:100vw;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.vignette{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.85) 100%);
+}
+
+.choice-header{
+  text-align:center;padding-top:4vh;position:relative;z-index:5;
+}
+.logo-mark{
+  font-size:2rem;color:var(--rust);opacity:.7;
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:.4;transform:scale(1);}
+  50%{opacity:.9;transform:scale(1.08);}
+}
+.main-title{
+  font-family:'Special Elite',serif;
+  font-size:clamp(2rem,6vw,4.5rem);
+  letter-spacing:.15em;font-weight:400;
+  color:var(--bone);
+  text-shadow:0 0 30px rgba(224,147,47,.25),0 2px 0 #000;
+  animation:flicker 6s infinite;
+}
+@keyframes flicker{
+  0%,97%,100%{opacity:1;}
+  98%{opacity:.6;}
+  99%{opacity:.85;}
+}
+.tagline{
+  font-size:.9rem;letter-spacing:.5em;color:var(--ash);
+  text-transform:uppercase;margin-top:.6rem;font-weight:200;
+}
+
+.choice-container{
+  position:relative;z-index:5;
+  display:flex;gap:2vw;height:58vh;margin-top:4vh;
+  padding:0 3vw;
+}
+
+.chapter-btn{
+  flex:1;position:relative;overflow:hidden;
+  border:1px solid rgba(232,226,212,.15);
+  background:transparent;cursor:pointer;
+  transition:flex .6s cubic-bezier(.19,1,.22,1);
+  border-radius:2px;text-align:left;
+  font-family:inherit;
+}
+.chapter-btn:hover{flex:1.4;}
+
+.chapter-bg{
+  position:absolute;inset:0;
+  background-image:var(--img);
+  background-size:cover;background-position:center;
+  filter:grayscale(1) brightness(.35) contrast(1.2);
+  transform:scale(1.05);
+  transition:filter .8s ease,transform .8s ease;
+}
+.chapter-btn:hover .chapter-bg{
+  filter:grayscale(.3) brightness(.55) contrast(1.1);
+  transform:scale(1.12);
+}
+.chapter-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(12,12,10,.95) 10%,transparent 70%);
+}
+.glow{
+  position:absolute;inset:0;opacity:0;
+  background:radial-gradient(circle at 50% 120%,rgba(224,147,47,.5),transparent 60%);
+  transition:opacity .6s;pointer-events:none;
+}
+.chapter-btn:hover .glow{opacity:1;}
+.chapter-btn[data-chapter="2"]:hover .glow{
+  background:radial-gradient(circle at 50% 120%,rgba(63,143,143,.5),transparent 60%);
+}
+
+.chapter-content{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:2.5rem;
+}
+.chapter-num{
+  font-size:.8rem;letter-spacing:.4em;color:var(--rust);font-weight:700;
+}
+.chapter-btn[data-chapter="2"] .chapter-num{color:var(--led);}
+.chapter-content h2{
+  font-family:'Special Elite',serif;
+  font-size:clamp(1.4rem,3vw,2.4rem);
+  font-weight:400;margin:.4rem 0;letter-spacing:.03em;
+  color:var(--bone);
+}
+.chapter-desc{
+  color:var(--ash);font-size:.95rem;font-weight:200;
+  max-width:90%;line-height:1.4;transition:color .4s;
+}
+.chapter-btn:hover .chapter-desc{color:var(--bone);}
+.chapter-cta{
+  margin-top:1rem;font-size:.8rem;letter-spacing:.3em;
+  color:var(--fire);opacity:0;transform:translateX(-10px);
+  transition:all .5s .1s;text-transform:uppercase;
+}
+.chapter-btn[data-chapter="2"] .chapter-cta{color:var(--rain);}
+.chapter-btn:hover .chapter-cta{opacity:1;transform:translateX(0);}
+
+.choice-footer{
+  position:relative;z-index:5;text-align:center;
+  margin-top:3vh;color:var(--ash);font-size:.85rem;
+  letter-spacing:.15em;font-style:italic;opacity:.7;
+}
+
+/* ============================================================
+   ОВЕРЛЕЙ ПЕРЕХОДА
+   ============================================================ */
+.transition-overlay{
+  position:fixed;inset:0;z-index:100;
+  pointer-events:none;
+  clip-path:circle(0% at 50% 50%);
+  background:radial-gradient(circle at 50% 50%,#1a1510 0%,#000 70%);
+  display:flex;align-items:center;justify-content:center;
+  transition:clip-path .9s cubic-bezier(.77,0,.18,1);
+}
+.transition-overlay.active{
+  pointer-events:all;
+  clip-path:circle(150% at 50% 50%);
+}
+.transition-spores{
+  position:absolute;inset:0;opacity:0;
+  background-image:radial-gradient(circle,rgba(224,147,47,.15) 1px,transparent 1px);
+  background-size:40px 40px;
+  transition:opacity .5s .4s;
+}
+.transition-overlay.active .transition-spores{opacity:1;}
+
+.transition-text{
+  display:flex;align-items:center;gap:1.5rem;
+  opacity:0;transform:scale(.9);
+  transition:all .4s .5s;
+}
+.transition-overlay.active .transition-text{opacity:1;transform:scale(1);}
+.t-line{
+  width:0;height:1px;background:var(--rust);
+  transition:width .8s .7s ease;
+}
+.transition-overlay.active .t-line{width:80px;}
+.t-word{
+  font-family:'Special Elite',serif;
+  font-size:clamp(1.5rem,4vw,3rem);
+  letter-spacing:.2em;color:var(--bone);
+  text-shadow:0 0 20px rgba(224,147,47,.6);
+}
+
+/* ============================================================
+   СТРАНИЦЫ ЧАСТЕЙ (обёртки)
+   ============================================================ */
+.part-page{min-height:100vh;}
+.part1{
+  --accent:var(--fire);
+  --accent2:var(--rust);
+  --text:#c9c3b6;
+}
+.part2{
+  --bg:#080e0e;
+  --accent:var(--led);
+  --accent2:var(--rain);
+  --text:#b8c4c4;
+}
+.part2{background:#080e0e;}
+
+/* NAV */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1rem 2rem;
+  background:linear-gradient(to bottom,rgba(12,12,10,.92),transparent);
+  font-size:.85rem;letter-spacing:.2em;flex-wrap:wrap;gap:.5rem;
+}
+.part2 .topnav{background:linear-gradient(to bottom,rgba(8,14,14,.92),transparent);}
+.topnav a{color:var(--ash);text-decoration:none;transition:color .3s;cursor:pointer;}
+.topnav a:hover{color:var(--accent);}
+.nav-title{font-family:'Special Elite',serif;letter-spacing:.4em;color:var(--bone);}
+
+/* HERO */
+.hero{
+  position:relative;height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background-size:cover;background-position:center;
+  transform:scale(1.1);
+  animation:heroDrift 20s ease-in-out infinite alternate;
+}
+.part1 .hero-bg{
+  background-image:url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&q=80');
+  filter:grayscale(.7) brightness(.3) contrast(1.2) sepia(.2);
+}
+.part2 .hero-bg{
+  background-image:url('https://images.unsplash.com/photo-1490682143684-14369e18dce8?w=1600&q=80');
+  filter:grayscale(.8) brightness(.28) contrast(1.3) hue-rotate(160deg);
+}
+@keyframes heroDrift{to{transform:scale(1.2) translateX(-2%);}}
+.hero-fade{
+  position:absolute;inset:0;z-index:1;
+}
+.part1 .hero-fade{
+  background:linear-gradient(to bottom,rgba(12,12,10,.4),rgba(12,12,10,.88) 80%,#0c0c0a);
+}
+.part2 .hero-fade{
+  background:linear-gradient(to bottom,rgba(8,14,14,.35),rgba(8,14,14,.88) 80%,#080e0e);
+}
+.rain{
+  position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(105deg,transparent 0 12px,rgba(143,176,176,.18) 12px 13px);
+  background-size:200% 200%;
+  animation:rainFall .35s linear infinite;
+}
+@keyframes rainFall{to{background-position:-40px 80px;}}
+
+.hero-content{position:relative;z-index:2;padding:2rem;}
+.kicker{
+  letter-spacing:.4em;font-size:.75rem;color:var(--accent2);
+  text-transform:uppercase;margin-bottom:1rem;
+}
+.hero h1{
+  font-family:'Special Elite',serif;
+  font-size:clamp(2.5rem,9vw,7rem);
+  letter-spacing:.05em;line-height:1;
+  color:var(--bone);
+  text-shadow:0 0 40px rgba(224,147,47,.3);
+  animation:flicker 7s infinite;
+}
+.part2 .hero h1{text-shadow:0 0 60px rgba(63,143,143,.5);}
+.subtitle{color:var(--ash);letter-spacing:.5em;font-size:.9rem;margin-top:1rem;text-transform:uppercase;}
+.hero-quote{
+  margin-top:2.5rem;font-style:italic;color:var(--bone);
+  opacity:.7;font-size:1.1rem;
+}
+.scroll-hint{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  font-size:.7rem;letter-spacing:.3em;color:var(--ash);
+  animation:bounce 2s infinite;z-index:3;
+}
+@keyframes bounce{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,8px);}}
+
+/* BLOCKS */
+.block{
+  max-width:1100px;margin:0 auto;padding:5rem 2rem;
+  opacity:0;transform:translateY(40px);
+  transition:opacity 1s,transform 1s;
+}
+.block.in{opacity:1;transform:translateY(0);}
+.sec-title{
+  font-family:'Special Elite',serif;
+  font-size:clamp(1.8rem,4vw,2.8rem);
+  margin-bottom:2.5rem;font-weight:400;position:relative;
+  padding-bottom:.8rem;color:var(--bone);
+}
+.sec-title::after{
+  content:'';position:absolute;bottom:0;left:0;
+  width:60px;height:2px;background:var(--accent2);
+}
+
+/* STORY */
+.story-grid{display:grid;grid-template-columns:2fr 1fr;gap:3rem;}
+.story-text p{line-height:1.8;color:var(--text);margin-bottom:1.2rem;font-weight:200;}
+.epigraph{
+  border-left:2px solid var(--accent2);padding-left:1rem;
+  font-style:italic;color:var(--accent)!important;
+}
+.story-facts{display:flex;flex-direction:column;gap:1rem;}
+.fact{
+  border:1px solid rgba(232,226,212,.12);
+  padding:1rem;background:rgba(255,255,255,.02);
+}
+.part2 .fact{border-color:rgba(143,176,176,.15);background:rgba(143,176,176,.03);}
+.fact span{display:block;font-size:.7rem;letter-spacing:.2em;color:var(--ash);text-transform:uppercase;margin-bottom:.3rem;}
+.part2 .fact span{color:var(--cool);}
+.fact b{font-weight:400;color:var(--bone);}
+
+/* CHARS */
+.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;}
+.char-card{
+  border:1px solid rgba(232,226,212,.12);
+  padding:2rem;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.03),transparent);
+  transition:all .4s;
+}
+.part2 .char-card{border-color:rgba(143,176,176,.15);background:linear-gradient(135deg,rgba(143,176,176,.04),transparent);}
+.char-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--accent2);transform:scaleY(0);transform-origin:top;
+  transition:transform .4s;
+}
+.char-card:hover{border-color:rgba(224,147,47,.4);transform:translateY(-4px);}
+.part2 .char-card:hover{border-color:rgba(63,143,143,.5);}
+.char-card:hover::before{transform:scaleY(1);}
+.char-num{
+  font-family:'Special Elite',serif;font-size:2.5rem;
+  color:rgba(224,147,47,.25);position:absolute;top:1rem;right:1.2rem;
+}
+.part2 .char-num{color:rgba(63,143,143,.3);}
+.char-card h3{
+  font-family:'Special Elite',serif;font-size:1.3rem;
+  margin-bottom:.7rem;font-weight:400;color:var(--bone);padding-right:3rem;
+}
+.char-card p{color:var(--ash);font-weight:200;line-height:1.6;font-size:.92rem;}
+.part2 .char-card p{color:var(--cool);}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:2rem;}
+.timeline::before{
+  content:'';position:absolute;left:6px;top:.5rem;bottom:.5rem;width:1px;
+  background:linear-gradient(var(--accent2),transparent);
+}
+.t-item{position:relative;margin-bottom:2rem;}
+.t-dot{
+  position:absolute;left:-2rem;top:.4rem;width:12px;height:12px;
+  border:2px solid var(--accent2);border-radius:50%;
+  background:var(--bg);transform:translateX(-1px);
+}
+.part2 .t-dot{background:#080e0e;}
+.t-item h4{
+  font-family:'Special Elite',serif;font-weight:400;
+  font-size:1.2rem;color:var(--accent);margin-bottom:.3rem;
+}
+.t-item p{color:var(--ash);font-weight:200;}
+.part2 .t-item p{color:var(--cool);}
+
+/* LEGACY */
+.legacy p{line-height:1.9;color:var(--text);font-weight:200;margin-bottom:1rem;font-size:1.05rem;}
+.legacy b{color:var(--accent);font-weight:400;}
+.legacy i{color:var(--bone);}
+
+/* FOOTER */
+.part-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3rem 2rem;border-top:1px solid rgba(232,226,212,.1);
+  font-size:.8rem;letter-spacing:.15em;color:var(--ash);
+  flex-wrap:wrap;gap:1rem;
+}
+.part2 .part-footer{border-color:rgba(143,176,176,.15);color:var(--cool);}
+.part-footer a{color:var(--ash);text-decoration:none;transition:color .3s;cursor:pointer;}
+.part2 .part-footer a{color:var(--cool);}
+.part-footer a:hover{color:var(--accent);}
+
+/* ============================================================
+   АДАПТИВ
+   ============================================================ */
+@media(max-width:768px){
+  .choice-screen{height:auto;min-height:100vh;overflow-y:auto;padding-bottom:2rem;}
+  .choice-container{flex-direction:column;height:auto;gap:1rem;}
+  .chapter-btn{min-height:200px;flex:none;}
+  .chapter-btn:hover{flex:none;}
+  .story-grid{grid-template-columns:1fr;}
+  .hero{height:90vh;}
+  .topnav{font-size:.72rem;padding:.8rem 1rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     АТМОСФЕРА
+     ============================================================ -->
+<canvas id="spores"></canvas>
+<div class="grain"></div>
+
+<!-- ============================================================
+     ЭКРАН 1: ВЫБОР ЧАСТИ
+     ============================================================ -->
+<section class="screen active choice-screen" id="screen-choice">
+  <div class="vignette"></div>
+
+  <header class="choice-header">
+    <div class="logo-mark">&#9760;</div>
+    <h1 class="main-title">THE LAST OF US</h1>
+    <p class="tagline">Endure and Survive</p>
+  </header>
+
+  <main class="choice-container">
+    <button class="chapter-btn" data-chapter="1">
+      <div class="chapter-bg" style="--img:url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&q=80')"></div>
+      <div class="chapter-overlay"></div>
+      <div class="chapter-content">
+        <span class="chapter-num">PART I</span>
+        <h2>The Last of Us</h2>
+        <p class="chapter-desc">Джоэл и Элли. Путь через руины Америки.</p>
+        <span class="chapter-cta">Войти &#8594;</span>
+      </div>
+      <div class="glow"></div>
+    </button>
+
+    <button class="chapter-btn" data-chapter="2">
+      <div class="chapter-bg" style="--img:url('https://images.unsplash.com/photo-1490682143684-14369e18dce8?w=1200&q=80')"></div>
+      <div class="chapter-overlay"></div>
+      <div class="chapter-content">
+        <span class="chapter-num">PART II</span>
+        <h2>The Last of Us: Part II</h2>
+        <p class="chapter-desc">Элли. Месть. Прощение. Сиэтл.</p>
+        <span class="chapter-cta">Войти &#8594;</span>
+      </div>
+      <div class="glow"></div>
+    </button>
+  </main>
+
+  <footer class="choice-footer">
+    <p>&#9760; «Когда ты потерян в темноте, ищи свет.» &#9760;</p>
+  </footer>
+</section>
+
+<!-- ============================================================
+     ЭКРАН 2: PART I
+     ============================================================ -->
+<section class="screen part-page part1" id="screen-part1">
+
+  <nav class="topnav">
+    <a data-goto="choice">&#8592; Выбор части</a>
+    <span class="nav-title">PART I</span>
+    <a data-goto="part2">Part II &#8594;</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-fade"></div>
+    <div class="hero-content">
+      <p class="kicker">2013 · Naughty Dog · PlayStation</p>
+      <h1>The Last of Us</h1>
+      <p class="subtitle">«Endure and Survive»</p>
+      <p class="hero-quote">«Когда ты потерян в темноте — ищи свет.»</p>
+    </div>
+    <div class="scroll-hint">SCROLL &#8595;</div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">История</h2>
+    <div class="story-grid">
+      <div class="story-text">
+        <p>Двадцать лет после вспышки кордицепсной инфекции, уничтожившей цивилизацию, Джоэл — закалённый контрабандист — получает заказ сопроводить девочку-подростка Элли через опасные карантинные зоны Америки.</p>
+        <p>То, что начинается как работа, превращается в путешествие, где каждый выбор — вопрос жизни и смерти, а привязанность оказывается опаснее любой инфекции.</p>
+        <p class="epigraph">«No matter what, you keep finding something to fight for.»</p>
+      </div>
+      <div class="story-facts">
+        <div class="fact"><span>Разработчик</span><b>Naughty Dog</b></div>
+        <div class="fact"><span>Дата выхода</span><b>14 июня 2013</b></div>
+        <div class="fact"><span>Платформы</span><b>PS3 · PS4 · PS5 · PC</b></div>
+        <div class="fact"><span>Жанр</span><b>Action-adventure · Survival</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Персонажи</h2>
+    <div class="chars">
+      <article class="char-card">
+        <div class="char-num">01</div>
+        <h3>Джоэл Миллер</h3>
+        <p>Контрабандист из Бостона. Потерял дочь в день вспышки. Жестокий, уставший — и всё ещё способный любить.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">02</div>
+        <h3>Элли Уильямс</h3>
+        <p>14 лет. Укушенная, но не заражённая. Наглая, любопытная, с сердцем, которое не сломать.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">03</div>
+        <h3>Тесс</h3>
+        <p>Партнёр Джоэла. Жёсткая, верная. Её последний выбор — жертва, которая меняет всё.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">04</div>
+        <h3>Билл</h3>
+        <p>Параноик-выживальщик из Линкольна. Одиночество как броня — и один настоящий друг.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">05</div>
+        <h3>Генри и Сэм</h3>
+        <p>Братья, чей путь — трагедия в двух действиях. Сэм хочет услышать, что всё будет хорошо.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">06</div>
+        <h3>Марлин</h3>
+        <p>Лидер «Светлячков». Верит, что Элли — ключ к вакцине. Цена — Элли.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Путь</h2>
+    <div class="timeline">
+      <div class="t-item"><span class="t-dot"></span><h4>Бостон · QZ</h4><p>Начало. Карантинная зона под контролем военных.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Линкольн</h4><p>Билл, ловушки и первый урок доверия.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Питтсбург</h4><p>Охотники. Гостиница. Автобус. Ад.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Вайоминг</h4><p>Джоэл и Элли — уже не работа, уже семья.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Университет Востока</h4><p>Разбитая надежда, ранение и зима.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Солт-Лейк-Сити</h4><p>Госпиталь «Светлячков». Финальный выбор.</p></div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Наследие</h2>
+    <div class="legacy">
+      <p>Победитель <b>200+ наград «Игра года»</b>. Переиздание <i>The Last of Us Remastered</i> (2014), <i>Part I</i> (2022) и сериал HBO (2023).</p>
+      <p>Игра, которая доказала: видеоигры — это искусство рассказа.</p>
+    </div>
+  </section>
+
+  <footer class="part-footer">
+    <a data-goto="choice">&#8592; Назад к выбору</a>
+    <span>Part I © Naughty Dog · Fan Project</span>
+    <a data-goto="part2">Part II &#8594;</a>
+  </footer>
+</section>
+
+<!-- ============================================================
+     ЭКРАН 3: PART II
+     ============================================================ -->
+<section class="screen part-page part2" id="screen-part2">
+
+  <nav class="topnav">
+    <a data-goto="choice">&#8592; Выбор части</a>
+    <span class="nav-title">PART II</span>
+    <a data-goto="part1">Part I &#8592;</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="rain"></div>
+    <div class="hero-fade"></div>
+    <div class="hero-content">
+      <p class="kicker">2020 · Naughty Dog · PlayStation</p>
+      <h1>Part&nbsp;II</h1>
+      <p class="subtitle">«The cycle of violence»</p>
+      <p class="hero-quote">«Я сделаю это одна. Всегда.»</p>
+    </div>
+    <div class="scroll-hint">SCROLL &#8595;</div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">История</h2>
+    <div class="story-grid">
+      <div class="story-text">
+        <p>Пять лет спустя. Элли и Джоэл живут в поселении Джексон. Но однажды ночью прошлое возвращается — и Элли отправляется в Сиэтл за местью.</p>
+        <p>История, рассказанная с двух сторон. Месть, которая поглощает. И прощение, которое нужно найти в себе — чтобы в конце концов вернуться домой.</p>
+        <p class="epigraph">«The cycle of violence continues — unless we choose to break it.»</p>
+      </div>
+      <div class="story-facts">
+        <div class="fact"><span>Разработчик</span><b>Naughty Dog</b></div>
+        <div class="fact"><span>Дата выхода</span><b>19 июня 2020</b></div>
+        <div class="fact"><span>Платформы</span><b>PS4 · PS5 · PC</b></div>
+        <div class="fact"><span>Жанр</span><b>Action-adventure · Stealth · Survival</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Персонажи</h2>
+    <div class="chars">
+      <article class="char-card">
+        <div class="char-num">01</div>
+        <h3>Элли</h3>
+        <p>19 лет. Выросла в Джексоне, но так и не научилась жить без насилия. Её месть — это не злость, а любовь, которой не дали выхода.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">02</div>
+        <h3>Эбби Андерсон</h3>
+        <p>Солдат WLF. Дочь хирурга, которого убил Джоэл. Её путь — зеркало Элли. Игра не даёт злодея — она даёт человека.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">03</div>
+        <h3>Джоэл Миллер</h3>
+        <p>Прошлое не отпускает. Тот же выбор, что в финале первой части, стоит ему всего. Но он не жалеет.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">04</div>
+        <h3>Дина</h3>
+        <p>Партнёр Элли. Единственный человек, который напоминает ей, что можно жить, а не только выживать.</p>
+      </article>
+            <article class="char-card">
+        <div class="char-num">05</div>
+        <h3>Джесси</h3>
+        <p>Отец ребёнка Дины. Смелый, добрый — и на его плечах Элли учится тому, что значит быть человеком.</p>
+      </article>
+      <article class="char-card">
+        <div class="char-num">06</div>
+        <h3>Лев</h3>
+        <p>Серафит. Изгнанник за отказ от пути пророка. Единственный друг Эбби — и её совесть.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Сиэтл</h2>
+    <div class="timeline">
+      <div class="t-item"><span class="t-dot"></span><h4>Джексон</h4><p>Дом. Снег. Разговор, который всё изменит.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Сиэтл — день 1</h4><p>Дождь, затопления, первый след.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Сиэтл — день 2</h4><p>Штаб WLF. Правда о том, кем была эта война.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Сиэтл — день 3</h4><p>Война с Серафитами. Госпиталь. Встреча, которую невозможно забыть.</p></div>
+      <div class="t-item"><span class="t-dot"></span><h4>Санта-Барбара</h4><p>Пляж. Столбы. Финальный выбор — отпустить.</p></div>
+    </div>
+  </section>
+
+  <section class="block reveal">
+    <h2 class="sec-title">Что игра говорит о нас</h2>
+    <div class="legacy">
+      <p>Part II — не история о мести. Это история о том, что месть <b>не заканчивается</b>. Каждый удар рождает следующий. Каждый персонаж — герой собственной истории и монстр чужой.</p>
+      <p>Игра не даёт лёгкого ответа. Она даёт тишину после финального аккорда — и вопрос: <i>«Всё это было того стоило?»</i></p>
+    </div>
+  </section>
+
+  <footer class="part-footer">
+    <a data-goto="part1">&#8592; Part I</a>
+    <span>Part II © Naughty Dog · Fan Project</span>
+    <a data-goto="choice">Выбор части &#8594;</a>
+  </footer>
+</section>
+
+<!-- ============================================================
+     ОВЕРЛЕЙ ПЕРЕХОДА
+     ============================================================ -->
+<div class="transition-overlay" id="transition">
+  <div class="transition-spores"></div>
+  <div class="transition-text">
+    <span class="t-line"></span>
+    <span class="t-word" id="tWord">Part I</span>
+    <span class="t-line"></span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   1) СПОРЫ НА CANVAS — атмосфера
+   ============================================================ */
+(function(){
+  const canvas = document.getElementById('spores');
+  const ctx = canvas.getContext('2d');
+  let w, h, spores = [];
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const COUNT = 120;
+  for(let i=0;i<COUNT;i++){
+    spores.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: Math.random()*1.8+0.3,
+      vx: (Math.random()-0.5)*0.25,
+      vy: -(Math.random()*0.3+0.05),
+      a: Math.random()*0.5+0.15,
+      phase: Math.random()*Math.PI*2
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(const s of spores){
+      s.phase += 0.01;
+      s.x += s.vx + Math.sin(s.phase)*0.15;
+      s.y += s.vy;
+      if(s.y < -10){ s.y = h+10; s.x = Math.random()*w; }
+      if(s.x < -10) s.x = w+10;
+      if(s.x > w+10) s.x = -10;
+
+      const alpha = s.a * (0.6 + Math.sin(s.phase)*0.4);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(224,180,120,${alpha})`;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(224,147,47,.6)';
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================================================
+   2) ЗВУК ПЕРЕХОДА (WebAudio, без файлов)
+   ============================================================ */
+function playRift(chapter){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = new AC();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(chapter === '2' ? 70 : 90, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(20, ac.currentTime + 1.2);
+    g.gain.setValueAtTime(0.0001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.07, ac.currentTime + 0.1);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 1.2);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + 1.3);
+  }catch(e){}
+}
+
+/* ============================================================
+   3) НАВИГАЦИЯ + ПЕРЕХОД МЕЖДУ ЭКРАНАМИ
+   ============================================================ */
+const screens = {
+  choice: document.getElementById('screen-choice'),
+  part1:  document.getElementById('screen-part1'),
+  part2:  document.getElementById('screen-part2')
+};
+const overlay = document.getElementById('transition');
+const tWord   = document.getElementById('tWord');
+let busy = false;
+
+function goTo(target, withTransition, label){
+  if(busy) return;
+  busy = true;
+
+  // Заголовок перехода
+  if(label) tWord.textContent = label;
+
+  if(withTransition){
+    overlay.classList.add('active');
+    playRift(target === 'part2' ? '2' : '1');
+
+    setTimeout(() => {
+      showScreen(target);
+      // даём экрану проявиться, потом закрываем оверлей
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        busy = false;
+      }, 450);
+    }, 900);
+  } else {
+    showScreen(target);
+    busy = false;
+  }
+}
+
+function showScreen(target){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[target].classList.add('active');
+  window.scrollTo(0,0);
+
+  // перезапускаем анимации reveal для активного экрана
+  const active = screens[target];
+  active.querySelectorAll('.reveal').forEach(el => {
+    el.classList.remove('in');
+    requestAnimationFrame(() => observer.observe(el));
+  });
+}
+
+/* Кнопки выбора части */
+document.querySelectorAll('.chapter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ch = btn.dataset.chapter;
+    goTo(ch === '1' ? 'part1' : 'part2', true, ch === '1' ? 'Part I' : 'Part II');
+  });
+});
+
+/* Все data-goto ссылки */
+document.querySelectorAll('[data-goto]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = link.dataset.goto;
+    const label =
+      target === 'part1' ? 'Part I' :
+      target === 'part2' ? 'Part II' :
+      'The Last of Us';
+    goTo(target, true, label);
+  });
+});
+
+/* ============================================================
+   4) REVEAL ПРИ СКРОЛЛЕ
+   ============================================================ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      e.target.classList.add('in');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+/* ============================================================
+   5) МЕЛОЧЬ: параллакс для hero на скролле
+   ============================================================ */
+window.addEventListener('scroll', () => {
+  const activeHero = document.querySelector('.screen.active .hero-bg');
+  if(activeHero){
+    const y = window.scrollY;
+    activeHero.style.transform = `scale(1.1) translateY(${y * 0.15}px)`;
+  }
+}, { passive: true });
+</script>
+</body>
+</html>
